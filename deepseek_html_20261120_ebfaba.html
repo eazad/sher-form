@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ارسال شعر و صدا — جشنوارهٔ ملی شعر البرز</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 18px 12px;
+    background: #eef1f5;
+    font-family: Tahoma, "Vazirmatn", "Iranian Sans", Arial, sans-serif;
+    color: #1a1a1a;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .diag {
+    max-width: 720px; margin: 0 auto 14px;
+    background: #fff; border-radius: 12px;
+    padding: 14px 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,.06);
+    font-size: 13px;
+    border-right: 5px solid #f59e0b;
+  }
+  .diag.ok { border-right-color: #10b981; }
+  .diag.bad { border-right-color: #dc2626; }
+  .diag h4 { margin: 0 0 8px; color: #0f766e; font-size: 14px; }
+  .diag ul { margin: 0; padding-right: 18px; line-height: 2; }
+  .diag li { margin: 2px 0; }
+  .diag .ok-mark { color: #059669; font-weight: bold; }
+  .diag .bad-mark { color: #dc2626; font-weight: bold; }
+  .diag .warn-mark { color: #d97706; font-weight: bold; }
+  .diag-btn {
+    margin-top: 8px; padding: 6px 12px;
+    background: #f0fdfa; border: 1px solid #99f6e4;
+    border-radius: 6px; font-family: inherit; font-size: 12px;
+    cursor: pointer; color: #0f766e;
+  }
+
+  .status {
+    max-width: 720px; margin: 0 auto 12px;
+    padding: 10px 14px; border-radius: 10px;
+    font-size: 13px; text-align: center;
+    background: #fef9c3; color: #713f12;
+    line-height: 1.7;
+  }
+  .status.ok { background: #dcfce7; color: #166534; }
+  .status.err { background: #fee2e2; color: #991b1b; }
+
+  .card {
+    max-width: 720px; margin: 0 auto; background: #fff;
+    border-radius: 16px; overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,.08);
+  }
+
+  .head {
+    background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
+    color: #fff; padding: 20px 22px;
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 12px; flex-wrap: wrap;
+  }
+  .head h1 { margin: 0 0 4px; font-size: 19px; }
+  .head .sub { font-size: 11.5px; opacity: .9; }
+  .head .badge {
+    background: rgba(255,255,255,.18);
+    border: 1px solid rgba(255,255,255,.35);
+    padding: 6px 12px; border-radius: 9px;
+    font-size: 11.5px; line-height: 1.8;
+    white-space: nowrap;
+  }
+
+  .body { padding: 18px 20px 24px; }
+
+  .section { margin-bottom: 20px; }
+  .section-title {
+    font-size: 13.5px; font-weight: bold; color: #0f766e;
+    margin-bottom: 10px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-title .icon {
+    width: 24px; height: 24px;
+    background: #f0fdfa; border: 1.5px solid #99f6e4;
+    border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+  }
+
+  .field { margin-bottom: 11px; }
+  .field label {
+    display: block; font-size: 12.5px; color: #64748b;
+    font-weight: bold; margin-bottom: 5px;
+  }
+  .field input, .field textarea {
+    width: 100%; padding: 11px 13px;
+    border: 1.5px solid #e2e8f0; border-radius: 10px;
+    font-family: inherit; font-size: 14px;
+    background: #f8fafc; color: #0f172a;
+    outline: none; transition: .15s;
+  }
+  .field input:focus, .field textarea:focus {
+    border-color: #14b8a6; background: #fff;
+    box-shadow: 0 0 0 3px rgba(20,184,166,.12);
+  }
+  .field textarea { min-height: 90px; resize: vertical; line-height: 1.9; }
+
+  .recorder {
+    background: #f8fafc; border: 1.5px solid #e2e8f0;
+    border-radius: 14px; padding: 16px; text-align: center;
+  }
+  .rec-status {
+    font-size: 13px; color: #475569; margin-bottom: 10px;
+    min-height: 20px; font-weight: bold;
+  }
+  .rec-status.recording { color: #dc2626; }
+  .rec-status.done { color: #0f766e; }
+
+  .rec-timer {
+    font-size: 26px; font-weight: bold;
+    color: #0f766e; letter-spacing: 2px;
+    margin-bottom: 10px;
+    font-variant-numeric: tabular-nums;
+  }
+  .rec-timer.recording { color: #dc2626; }
+
+  .rec-controls {
+    display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
+  }
+  .rec-btn {
+    min-width: 130px; padding: 12px 20px;
+    border: 0; border-radius: 11px;
+    font-family: inherit; font-size: 14.5px; font-weight: bold;
+    cursor: pointer; color: #fff;
+    box-shadow: 0 3px 10px rgba(0,0,0,.12);
+    transition: .15s;
+  }
+  .rec-btn.record { background: #dc2626; }
+  .rec-btn.record:hover { background: #b91c1c; }
+  .rec-btn.stop { background: #475569; }
+  .rec-btn.stop:hover { background: #334155; }
+  .rec-btn.record-again { background: #0f766e; }
+  .rec-btn:disabled { opacity: .45; cursor: not-allowed; }
+
+  #audioPreview {
+    width: 100%; margin-top: 12px; border-radius: 10px;
+  }
+
+  .file-info {
+    margin-top: 10px; font-size: 12px; color: #64748b;
+    display: flex; justify-content: space-between;
+    padding: 8px 12px; background: #fff; border-radius: 8px;
+    border: 1px solid #e2e8f0;
+  }
+
+  .error-box {
+    margin-top: 12px;
+    background: #fef2f2; border: 1.5px solid #fecaca;
+    border-radius: 10px; padding: 12px 14px;
+    font-size: 13px; color: #991b1b;
+    line-height: 1.9; text-align: right;
+  }
+  .error-box b { color: #7f1d1d; }
+  .error-box ul { margin: 8px 0; padding-right: 18px; }
+  .error-box code {
+    background: #fff; padding: 2px 6px; border-radius: 4px;
+    font-family: monospace; color: #7f1d1d;
+  }
+
+  .consent {
+    display: flex; align-items: flex-start; gap: 8px;
+    font-size: 12px; color: #475569; line-height: 1.8;
+    padding: 10px 12px; margin-bottom: 12px;
+    background: #f8fafc; border-radius: 10px;
+    border: 1px solid #e2e8f0;
+  }
+  .consent input { margin-top: 3px; accent-color: #0f766e; }
+
+  .send-btn {
+    width: 100%; padding: 14px;
+    background: #0f766e; color: #fff;
+    border: 0; border-radius: 12px;
+    font-family: inherit; font-size: 15px; font-weight: bold;
+    cursor: pointer; box-shadow: 0 4px 12px rgba(15,118,110,.25);
+    transition: .15s; margin-bottom: 9px;
+  }
+  .send-btn:hover:not(:disabled) { background: #0d5f59; }
+  .send-btn:disabled { opacity: .45; cursor: not-allowed; box-shadow: none; }
+  .send-btn.secondary {
+    background: #fff; color: #0f766e;
+    border: 1.5px solid #0f766e; box-shadow: none;
+  }
+  .send-btn.secondary:hover:not(:disabled) { background: #f0fdfa; }
+
+  .footer {
+    background: #f8fafc; border-top: 1px solid #e2e8f0;
+    padding: 12px 20px; font-size: 11px; color: #94a3b8;
+    line-height: 1.8; text-align: center;
+  }
+  .footer b { color: #0f766e; }
+
+  .helper-note {
+    font-size: 11.5px; color: #64748b;
+    background: #fef9c3; border: 1px solid #fde68a;
+    border-radius: 8px; padding: 8px 12px;
+    margin-top: 10px; line-height: 1.8;
+  }
+
+  .hidden { display: none !important; }
+
+  @media (max-width: 480px) {
+    .head h1 { font-size: 16px; }
+    .rec-btn { min-width: 110px; font-size: 13.5px; padding: 11px 14px; }
+    .body { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ==================== دیاگنوستیک ==================== -->
+<div class="diag" id="diag">
+  <h4>🔍 بررسی وضعیت فنی</h4>
+  <ul id="diagList"></ul>
+  <button class="diag-btn" onclick="recheckDiag()">بررسی مجدد</button>
+</div>
+
+<!-- ==================== نوار وضعیت ==================== -->
+<div class="status" id="statusBar">لطفاً اطلاعات را پر کنید و صدای خود را ضبط کنید.</div>
+
+<!-- ==================== کارت اصلی ==================== -->
+<div class="card">
+  <div class="head">
+    <div>
+      <h1>ارسال شعر و صدا</h1>
+      <div class="sub">جشنوارهٔ ملی شعر البرز — آرشیو صوتی شعر ایران</div>
+    </div>
+    <div class="badge">
+      <div>مقصد: <b>ketebefarsi@gmail.com</b></div>
+      <div>وضعیت: <b id="badgeStatus">در حال پر کردن</b></div>
+    </div>
+  </div>
+
+  <div class="body">
+
+    <!-- اطلاعات شاعر -->
+    <div class="section">
+      <div class="section-title">
+        <span class="icon">👤</span>
+        <span>اطلاعات شاعر</span>
+      </div>
+      <div class="field">
+        <label for="poetName">نام و نام خانوادگی *</label>
+        <input type="text" id="poetName" placeholder="مثلاً: عبدالنبی زارع عارف">
+      </div>
+      <div class="field">
+        <label for="poetPen">تخلص (اختیاری)</label>
+        <input type="text" id="poetPen" placeholder="مثلاً: عارف">
+      </div>
+      <div class="field">
+        <label for="poetCity">شهر (اختیاری)</label>
+        <input type="text" id="poetCity" placeholder="مثلاً: کرج">
+      </div>
+    </div>
+
+    <!-- شعر -->
+    <div class="section">
+      <div class="section-title">
+        <span class="icon">✒️</span>
+        <span>شعر شما</span>
+      </div>
+      <div class="field">
+        <label for="poemText">متن شعر *</label>
+        <textarea id="poemText" placeholder="شعر خود را اینجا بنویسید..."></textarea>
+      </div>
+      <div class="field">
+        <label for="poemWord">واژهٔ انتخابی (اختیاری)</label>
+        <input type="text" id="poemWord" placeholder="مثلاً: عارف">
+      </div>
+    </div>
+
+    <!-- ضبط -->
+    <div class="section">
+      <div class="section-title">
+        <span class="icon">🎙️</span>
+        <span>صدای شما</span>
+      </div>
+      <div class="recorder">
+        <div class="rec-status" id="recStatus">آمادهٔ ضبط</div>
+        <div class="rec-timer" id="recTimer">۰۰:۰۰</div>
+        <div class="rec-controls">
+          <button class="rec-btn record" id="recordBtn">● ضبط</button>
+          <button class="rec-btn stop" id="stopBtn" disabled>■ توقف</button>
+        </div>
+        <audio id="audioPreview" controls class="hidden"></audio>
+        <div class="file-info hidden" id="fileInfo">
+          <span>مدت: <b id="infoDuration">—</b></span>
+          <span>حجم: <b id="infoSize">—</b></span>
+        </div>
+        <div id="recError" class="error-box hidden"></div>
+      </div>
+      <div class="helper-note">
+        💡 در محیط آرام ضبط کنید. حداکثر مدت: ۲ دقیقه. حداکثر حجم: ۵ مگابایت.
+      </div>
+    </div>
+
+    <!-- ارسال -->
+    <div class="section">
+      <div class="section-title">
+        <span class="icon">📤</span>
+        <span>ارسال برای جشنواره</span>
+      </div>
+      <label class="consent">
+        <input type="checkbox" id="consent">
+        <span>با ارسال، اجازهٔ استفاده از شعر و صدایم در آرشیو صوتی و برنامه‌های جشنوارهٔ ملی شعر البرز را می‌دهم.</span>
+      </label>
+      <button class="send-btn" id="sendEmailBtn" disabled>📧 ارسال به ایمیل دبیرخانه</button>
+      <button class="send-btn secondary" id="sendShareBtn" disabled>📤 ارسال با واتساپ/تلگرام (موبایل)</button>
+      <button class="send-btn secondary" id="downloadBtn" disabled>💾 دانلود فایل صوتی</button>
+      <div id="sendResult" class="status hidden" style="margin-top:12px;"></div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <b>حریم خصوصی:</b> صدا در همین دستگاه ضبط می‌شود. ارسال فقط با دکمه‌های بالا انجام می‌گیرد.
+  </div>
+</div>
+
+<!-- ==================== فرم مخفی FormSubmit ==================== -->
+<form id="mailForm"
+      action="https://formsubmit.co/ketebefarsi@gmail.com"
+      method="POST"
+      enctype="multipart/form-data"
+      target="submitFrame"
+      style="display:none">
+  <input type="hidden" name="_subject" id="f_subject">
+  <input type="hidden" name="_template" value="table">
+  <input type="hidden" name="_captcha" value="false">
+  <input type="text" name="_honey" style="display:none">
+  <input type="hidden" name="poet_name" id="f_name">
+  <input type="hidden" name="poet_pen" id="f_pen">
+  <input type="hidden" name="poet_city" id="f_city">
+  <input type="hidden" name="poet_word" id="f_word">
+  <input type="hidden" name="poem" id="f_poem">
+  <input type="hidden" name="duration" id="f_duration">
+  <input type="file" name="attachment" id="f_audio">
+</form>
+<iframe name="submitFrame" id="submitFrame" style="display:none"></iframe>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ============================================================
+     ابزارهای کمکی
+  ============================================================ */
+  const FA = ['۰','۱','۲','۳','۴','۵','۶','۷','۸','۹'];
+  const toFa = s => String(s).replace(/[0-9]/g, d => FA[+d]);
+  const fmtTime = s => toFa(String(Math.floor(s/60)).padStart(2,'0') + ':' + String(Math.floor(s%60)).padStart(2,'0'));
+  const fmtSize = b => {
+    if (b < 1024) return toFa(b) + ' بایت';
+    if (b < 1048576) return toFa((b/1024).toFixed(1)) + ' ک‌بایت';
+    return toFa((b/1048576).toFixed(2)) + ' مگابایت';
+  };
+  const safeName = s => String(s).replace(/[\\/:*?"<>|]/g, '_').replace(/\s+/g,'-').slice(0,40) || 'poem';
+
+  /* ============================================================
+     عناصر
+  ============================================================ */
+  const $ = id => document.getElementById(id);
+  const elName = $('poetName'), elPen = $('poetPen'), elCity = $('poetCity');
+  const elPoem = $('poemText'), elWord = $('poemWord'), elConsent = $('consent');
+  const elRec = $('recordBtn'), elStop = $('stopBtn');
+  const elTimer = $('recTimer'), elRecStatus = $('recStatus');
+  const elPreview = $('audioPreview'), elFileInfo = $('fileInfo');
+  const elInfoDur = $('infoDuration'), elInfoSize = $('infoSize');
+  const elRecError = $('recError');
+  const elSendEmail = $('sendEmailBtn'), elSendShare = $('sendShareBtn'), elDl = $('downloadBtn');
+  const elStatus = $('statusBar'), elBadge = $('badgeStatus');
+  const elSendResult = $('sendResult');
+  const elDiag = $('diag'), elDiagList = $('diagList');
+
+  /* ============================================================
+     وضعیت ضبط
+  ============================================================ */
+  let mediaRecorder = null;
+  let chunks = [];
+  let audioBlob = null;
+  let audioFile = null;
+  let isRecording = false;
+  let startedAt = 0;
+  let timerHandle = null;
+  const MAX_SEC = 120;
+  let recordedSec = 0;
+
+  /* ============================================================
+     دیاگنوستیک
+  ============================================================ */
+  function diagItems() {
+    const items = [];
+    const proto = location.protocol;
+    if (proto === 'file:') {
+      items.push({cls:'bad', text:'صفحه از فایل باز شده (file://) — میکروفون مسدود است'});
+      items.push({cls:'bad', text:'راه‌حل: فایل را روی Netlify Drop بگذارید تا آدرس HTTPS بگیرید'});
+    } else if (proto === 'https:') {
+      items.push({cls:'ok', text:'پروتکل HTTPS ✓'});
+    } else if (proto === 'http:' && /^(localhost|127\.0\.0\.1)$/.test(location.hostname)) {
+      items.push({cls:'ok', text:'Localhost ✓'});
+    } else {
+      items.push({cls:'warn', text:'پروتکل ' + proto + ' — احتمالاً میکروفون مسدود است'});
+    }
+
+    if (!navigator.mediaDevices?.getUserMedia) {
+      items.push({cls:'bad', text:'getUserMedia پشتیبانی نمی‌شود'});
+    } else {
+      items.push({cls:'ok', text:'getUserMedia موجود ✓'});
+    }
+
+    if (!window.MediaRecorder) {
+      items.push({cls:'bad', text:'MediaRecorder پشتیبانی نمی‌شود'});
+    } else {
+      items.push({cls:'ok', text:'MediaRecorder موجود ✓'});
+    }
+
+    items.push({cls:'ok', text:'مرورگر: ' + (navigator.userAgent.match(/(Chrome|Firefox|Safari|Edge)\/[\d.]+/) || ['نامشخص'])[0]});
+
+    return items;
+  }
+
+  function renderDiag(items) {
+    elDiagList.innerHTML = items.map(it => {
+      const mark = it.cls === 'ok' ? '<span class="ok-mark">✓</span>'
+                 : it.cls === 'bad' ? '<span class="bad-mark">✗</span>'
+                 : '<span class="warn-mark">⚠</span>';
+      return '<li>' + mark + ' ' + it.text + '</li>';
+    }).join('');
+    const hasBad = items.some(it => it.cls === 'bad');
+    elDiag.className = 'diag ' + (hasBad ? 'bad' : 'ok');
+  }
+
+  function checkDiag() {
+    const items = diagItems();
+    if (navigator.permissions?.query) {
+      navigator.permissions.query({name:'microphone'}).then(p => {
+        const map = {granted:'ok', denied:'bad', prompt:'warn'};
+        const txt = {granted:'میکروفون: اجازه داده شده ✓', denied:'میکروفون: مسدود شده ✗ (از تنظیمات مرورگر رفع کنید)', prompt:'میکروفون: هنوز اجازه پرسیده نشده'};
+        items.push({cls:map[p.state] || 'warn', text:txt[p.state] || p.state});
+        renderDiag(items);
+      }).catch(() => renderDiag(items));
+    } else {
+      renderDiag(items);
+    }
+  }
+  window.recheckDiag = checkDiag;
+
+  /* ============================================================
+     خطاها
+  ============================================================ */
+  function showRecError(html) {
+    elRecError.innerHTML = html;
+    elRecError.classList.remove('hidden');
+  }
+  function hideRecError() {
+    elRecError.classList.add('hidden');
+    elRecError.innerHTML = '';
+  }
+
+  /* ============================================================
+     انتخاب فرمت
+  ============================================================ */
+  function pickMime() {
+    const list = [
+      'audio/webm;codecs=opus', 'audio/webm',
+      'audio/mp4;codecs=mp4a.40.2', 'audio/mp4',
+      'audio/ogg;codecs=opus'
+    ];
+    for (const t of list) {
+      if (MediaRecorder.isTypeSupported?.(t)) return t;
+    }
+    return '';
+  }
+
+  /* ============================================================
+     شروع ضبط
+  ============================================================ */
+  async function startRecording() {
+    hideRecError();
+
+    if (location.protocol === 'file:') {
+      showRecError(
+        '<b>میکروفون در حالت file:// مسدود است.</b><br><br>' +
+        'مرورگرها به دلایل امنیتی اجازهٔ ضبط صدا را در این حالت نمی‌دهند.<br><br>' +
+        '<b>راه‌حل سریع (۵ دقیقه):</b><br>' +
+        '۱. به <code>app.netlify.com/drop</code> بروید<br>' +
+        '۲. فایل HTML را داخل کادر رها کنید<br>' +
+        '۳. آدرس HTTPS دریافت‌شده را باز کنید — میکروفون کار می‌کند'
+      );
+      return;
+    }
+
+    if (!navigator.mediaDevices?.getUserMedia) {
+      showRecError('مرورگر شما از دسترسی به میکروفون پشتیبانی نمی‌کند. از Chrome، Safari ۱۴+ یا Firefox ۱۲۵+ استفاده کنید.');
+      return;
+    }
+    if (!window.MediaRecorder) {
+      showRecError('مرورگر شما از ضبط صدا پشتیبانی نمی‌کند. از Chrome، Safari ۱۴+ یا Firefox ۱۲۵+ استفاده کنید.');
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          sampleRate: 44100
+        }
+      });
+
+      const mime = pickMime();
+      mediaRecorder = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
+      chunks = [];
+      mediaRecorder.ondataavailable = e => { if (e.data?.size > 0) chunks.push(e.data); };
+      mediaRecorder.onstop = () => finalize(stream);
+      mediaRecorder.onerror = e => {
+        console.error(e);
+        showRecError('خطا در ضبط: ' + (e.error?.message || 'نامشخص'));
+        stream.getTracks().forEach(t => t.stop());
+        isRecording = false;
+        clearInterval(timerHandle);
+        uiRecording(false);
+      };
+
+      mediaRecorder.start(250);
+      isRecording = true;
+      startedAt = Date.now();
+      elTimer.textContent = '۰۰:۰۰';
+      uiRecording(true);
+      timerHandle = setInterval(() => {
+        const s = Math.floor((Date.now() - startedAt) / 1000);
+        elTimer.textContent = fmtTime(s);
+        if (s >= MAX_SEC) stopRecording();
+      }, 200);
+    } catch (err) {
+      console.error(err);
+      const messages = {
+        NotAllowedError: 'اجازهٔ دسترسی به میکروفون داده نشد. در تنظیمات مرورگر، دسترسی میکروفون را برای این سایت فعال کنید.',
+        NotFoundError: 'میکروفونی در دستگاه یافت نشد. اتصال میکروفون را بررسی کنید.',
+        NotReadableError: 'میکروفون در حال استفاده توسط برنامهٔ دیگری است. سایر برنامه‌ها را ببندید.',
+        OverconstrainedError: 'تنظیمات صوتی با دستگاه سازگار نیست.',
+        SecurityError: 'دسترسی به دلیل امنیتی مسدود است. از HTTPS استفاده کنید.'
+      };
+      showRecError(
+        '<b>' + (messages[err.name] || 'خطا در دسترسی به میکروفون') + '</b><br><br>' +
+        'نوع خطا: <code>' + err.name + '</code><br>' +
+        'پیام: ' + (err.message || '—') + '<br><br>' +
+        'اگر مطمئن نیستید، صفحه را روی HTTPS باز کنید و دوباره امتحان کنید.'
+      );
+    }
+  }
+
+  function stopRecording() {
+    if (!mediaRecorder || !isRecording) return;
+    recordedSec = Math.floor((Date.now() - startedAt) / 1000);
+    try { mediaRecorder.stop(); } catch(e) { console.warn(e); }
+    isRecording = false;
+    clearInterval(timerHandle);
+  }
+
+  function finalize(stream) {
+    stream.getTracks().forEach(t => t.stop());
+    const mime = mediaRecorder?.mimeType || 'audio/webm';
+    audioBlob = new Blob(chunks, { type: mime });
+
+    let ext = 'webm';
+    if (mime.includes('mp4')) ext = 'm4a';
+    else if (mime.includes('ogg')) ext = 'ogg';
+
+    const fname = 'poem-' + safeName(elName.value) + '-' + Date.now() + '.' + ext;
+    audioFile = new File([audioBlob], fname, { type: mime });
+
+    elPreview.src = URL.createObjectURL(audioBlob);
+    elPreview.classList.remove('hidden');
+    elInfoDur.textContent = fmtTime(recordedSec);
+    elInfoSize.textContent = fmtSize(audioBlob.size);
+    elFileInfo.classList.remove('hidden');
+
+    elRecStatus.textContent = '✓ ضبط شد';
+    elRecStatus.className = 'rec-status done';
+    elRec.textContent = '🔄 ضبط دوباره';
+    elRec.classList.remove('record');
+    elRec.classList.add('record-again');
+
+    uiRecording(false);
+    validate();
+
+    if (audioBlob.size > 5 * 1024 * 1024) {
+      showRecError('حجم فایل بیشتر از ۵ مگابایت است. لطفاً مدت کوتاه‌تری ضبط کنید.');
+    }
+  }
+
+  function uiRecording(on) {
+    if (on) {
+      elRec.disabled = true;
+      elStop.disabled = false;
+      elRecStatus.textContent = 'در حال ضبط...';
+      elRecStatus.className = 'rec-status recording';
+      elTimer.className = 'rec-timer recording';
+    } else {
+      elRec.disabled = false;
+      elStop.disabled = true;
+      elTimer.className = 'rec-timer';
+    }
+  }
+
+  /* ============================================================
+     اعتبارسنجی
+  ============================================================ */
+  function validate() {
+    const ok = elName.value.trim().length >= 2
+            && elPoem.value.trim().length >= 4
+            && !!audioFile
+            && elConsent.checked;
+
+    elSendEmail.disabled = !ok;
+    elSendShare.disabled = !ok;
+    elDl.disabled = !audioFile;
+    elBadge.textContent = ok ? 'آمادهٔ ارسال' : 'در حال پر کردن';
+
+    if (!elName.value.trim()) elStatus.textContent = 'نام خود را وارد کنید.';
+    else if (!elPoem.value.trim()) elStatus.textContent = 'شعر خود را وارد کنید.';
+    else if (!audioFile) elStatus.textContent = 'صدای خود را ضبط کنید.';
+    else if (!elConsent.checked) elStatus.textContent = 'اجازه‌نامه را تیک بزنید.';
+    else elStatus.textContent = 'همه‌چیز آماده است. یک روش ارسال را انتخاب کنید.';
+    elStatus.className = 'status';
+  }
+
+  /* ============================================================
+     ارسال به ایمیل با FormSubmit
+  ============================================================ */
+  function sendByEmail() {
+    if (!audioFile) return;
+
+    // پر کردن فیلدهای مخفی
+    $('f_name').value = elName.value.trim();
+    $('f_pen').value = elPen.value.trim();
+    $('f_city').value = elCity.value.trim();
+    $('f_word').value = elWord.value.trim();
+    $('f_poem').value = elPoem.value.trim();
+    $('f_duration').value = recordedSec + ' ثانیه';
+    $('f_subject').value = 'شعر و صدا — ' + (elName.value.trim() || 'بدون نام');
+
+    // قرار دادن فایل
+    try {
+      const dt = new DataTransfer();
+      dt.items.add(audioFile);
+      $('f_audio').files = dt.files;
+    } catch (e) {
+      console.error('DataTransfer error:', e);
+      elSendResult.className = 'status err';
+      elSendResult.textContent = 'مرورگر شما از ارسال مستقیم فایل پشتیبانی نمی‌کند. از دکمهٔ «دانلود فایل» استفاده کنید و فایل را دستی ایمیل کنید.';
+      elSendResult.classList.remove('hidden');
+      return;
+    }
+
+    elSendEmail.disabled = true;
+    elSendEmail.textContent = '⏳ در حال ارسال...';
+    elSendResult.className = 'status';
+    elSendResult.textContent = 'در حال ارسال به ایمیل دبیرخانه...';
+    elSendResult.classList.remove('hidden');
+
+    // شنونده برای iframe
+    const iframe = $('submitFrame');
+    let responded = false;
+    const onLoad = () => {
+      if (responded) return;
+      responded = true;
+      iframe.removeEventListener('load', onLoad);
+      elSendEmail.textContent = '📧 ارسال به ایمیل دبیرخانه';
+      elSendEmail.disabled = false;
+      elSendResult.className = 'status ok';
+      elSendResult.innerHTML =
+        '✓ ارسال انجام شد.<br><br>' +
+        '<b>اگر این اولین ارسال شماست:</b> یک ایمیل تأیید به <b>ketebefarsi@gmail.com</b> می‌آید. ' +
+        'روی لینک <b>Activate Form</b> کلیک کنید و سپس <b>یک‌بار دیگر</b> ارسال را بزنید.';
+    };
+    iframe.addEventListener('load', onLoad);
+
+    // ارسال
+    $('mailForm').submit();
+
+    // اگر تا ۱۵ ثانیه پاسخ نیامد
+    setTimeout(() => {
+      if (!responded) {
+        responded = true;
+        iframe.removeEventListener('load', onLoad);
+        elSendEmail.textContent = '📧 ارسال به ایمیل دبیرخانه';
+        elSendEmail.disabled = false;
+        elSendResult.className = 'status err';
+        elSendResult.textContent = 'پاسخ از سرور دریافت نشد. لطفاً از «دانلود فایل» استفاده کنید و فایل را دستی به ketebefarsi@gmail.com ایمیل کنید.';
+      }
+    }, 15000);
+  }
+
+  /* ============================================================
+     اشتراک‌گذاری
+  ============================================================ */
+  async function sendByShare() {
+    if (!audioFile) return;
+    const data = {
+      files: [audioFile],
+      title: 'شعر و صدای من',
+      text: 'نام: ' + elName.value.trim() + '\nشعر:\n' + elPoem.value.trim()
+    };
+    if (navigator.canShare?.({ files: data.files })) {
+      try {
+        await navigator.share(data);
+        elSendResult.className = 'status ok';
+        elSendResult.textContent = '✓ ارسال شد.';
+        elSendResult.classList.remove('hidden');
+        return;
+      } catch (e) {
+        if (e.name === 'AbortError') return;
+      }
+    }
+    // fallback
+    downloadFile();
+    elSendResult.className = 'status';
+    elSendResult.textContent = 'اشتراک‌گذاری مستقیم ممکن نشد. فایل دانلود شد؛ آن را دستی در واتساپ/تلگرام ارسال کنید.';
+    elSendResult.classList.remove('hidden');
+  }
+
+  function downloadFile() {
+    if (!audioFile) return;
+    const url = URL.createObjectURL(audioFile);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = audioFile.name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 3000);
+    elSendResult.className = 'status ok';
+    elSendResult.textContent = 'فایل دانلود شد. آن را به ketebefarsi@gmail.com ایمیل کنید.';
+    elSendResult.classList.remove('hidden');
+  }
+
+  /* ============================================================
+     ذخیرهٔ خودکار متن
+  ============================================================ */
+  function saveDraft() {
+    try {
+      localStorage.setItem('jashnvare_draft', JSON.stringify({
+        name: elName.value, pen: elPen.value, city: elCity.value,
+        poem: elPoem.value, word: elWord.value
+      }));
+    } catch(e) {}
+  }
+  function loadDraft() {
+    try {
+      const d = JSON.parse(localStorage.getItem('jashnvare_draft') || 'null');
+      if (d) {
+        elName.value = d.name || '';
+        elPen.value = d.pen || '';
+        elCity.value = d.city || '';
+        elPoem.value = d.poem || '';
+        elWord.value = d.word || '';
+      }
+    } catch(e) {}
+  }
+
+  /* ============================================================
+     رویدادها
+  ============================================================ */
+  elRec.addEventListener('click', () => {
+    if (audioBlob) {
+      if (!confirm('ضبط قبلی پاک شود و ضبط جدید شروع شود؟')) return;
+      audioBlob = null; audioFile = null; chunks = [];
+      elPreview.src = ''; elPreview.classList.add('hidden');
+      elFileInfo.classList.add('hidden');
+      elRec.textContent = '● ضبط';
+      elRec.classList.remove('record-again');
+      elRec.classList.add('record');
+      elRecStatus.textContent = 'آمادهٔ ضبط';
+      elRecStatus.className = 'rec-status';
+      validate();
+    }
+    startRecording();
+  });
+
+  elStop.addEventListener('click', stopRecording);
+  elSendEmail.addEventListener('click', sendByEmail);
+  elSendShare.addEventListener('click', sendByShare);
+  elDl.addEventListener('click', downloadFile);
+
+  [elName, elPoem, elConsent].forEach(el => el.addEventListener('input', validate));
+  elConsent.addEventListener('change', validate);
+  [elName, elPen, elCity, elPoem, elWord].forEach(el => el.addEventListener('input', saveDraft));
+
+  window.addEventListener('beforeunload', e => {
+    if (isRecording) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  /* ============================================================
+     شروع
+  ============================================================ */
+  loadDraft();
+  checkDiag();
+  validate();
+
+})();
+</script>
+
+</body>
+</html>
